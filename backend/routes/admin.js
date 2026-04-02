@@ -1,41 +1,66 @@
 const express = require("express");
 const router = express.Router();
+
 const User = require("../models/User");
 const Score = require("../models/Score");
 
-// GET ALL USERS
+// ================= GET ALL USERS =================
 router.get("/users", async (req, res) => {
-    const users = await User.find();
-    res.json(users);
+    try {
+        const users = await User.find();
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ message: "Error fetching users ❌" });
+    }
 });
 
-// UPDATE SUBSCRIPTION
+// ================= UPDATE SUBSCRIPTION =================
 router.post("/update-subscription", async (req, res) => {
-    const { userId, status } = req.body;
+    try {
+        const { userId, status } = req.body;
 
-    await User.findByIdAndUpdate(userId, {
-        subscriptionStatus: status
-    });
+        if (!userId || !status) {
+            return res.status(400).json({ message: "Missing fields ❌" });
+        }
 
-    res.json({ message: "Subscription updated" });
+        await User.findByIdAndUpdate(userId, {
+            subscriptionStatus: status
+        });
+
+        res.json({ message: "Subscription updated ✅" });
+
+    } catch (err) {
+        res.status(500).json({ message: "Error updating subscription ❌" });
+    }
 });
 
-// GET SCORES
+// ================= GET ALL SCORES =================
 router.get("/scores", async (req, res) => {
-    const scores = await Score.find();
-    res.json(scores);
+    try {
+        const scores = await Score.find();
+        res.json(scores);
+    } catch (err) {
+        res.status(500).json({ message: "Error fetching scores ❌" });
+    }
 });
 
+// ================= CHARITY REPORT =================
 router.get("/charity-report", async (req, res) => {
-    const users = await User.find();
+    try {
+        const users = await User.find();
 
-    const report = users.map(u => ({
-        user: u.name,
-        charity: u.charity,
-        subscription: u.subscriptionStatus
-    }));
+        const report = users.map(u => ({
+            name: u.name,
+            email: u.email,
+            charity: u.charity || "Not selected",
+            subscription: u.subscriptionStatus || "inactive"
+        }));
 
-    res.json(report);
+        res.json(report);
+
+    } catch (err) {
+        res.status(500).json({ message: "Error generating report ❌" });
+    }
 });
 
 module.exports = router;
