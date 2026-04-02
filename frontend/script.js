@@ -1,7 +1,9 @@
+const BASE_URL = "https://golf-app-grx0.onrender.com";
+
+// ================= EMAIL VALID =================
 function isValidEmail(email) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
-
 
 // ================= LOGIN =================
 async function login() {
@@ -9,7 +11,7 @@ async function login() {
     const password = document.getElementById("loginPassword").value;
 
     try {
-        const res = await fetch("http://localhost:5000/login", {
+        const res = await fetch(`${BASE_URL}/login`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, password })
@@ -24,12 +26,10 @@ async function login() {
             window.location.href = "dashboard.html";
         }
 
-    } catch (err) {
-        console.log(err);
+    } catch {
         document.getElementById("msg").innerText = "Server error";
     }
 }
-
 
 // ================= SIGNUP =================
 const signupForm = document.getElementById("signupForm");
@@ -45,7 +45,7 @@ if (signupForm) {
         const charity = document.getElementById("charity").value;
 
         try {
-            const res = await fetch("http://localhost:5000/subscribe", {
+            const res = await fetch(`${BASE_URL}/subscribe`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ name, email, password, plan, charity })
@@ -54,14 +54,13 @@ if (signupForm) {
             const data = await res.json();
             document.getElementById("msg").innerText = data.message;
 
-        } catch (err) {
+        } catch {
             document.getElementById("msg").innerText = "Server error";
         }
     });
 }
 
-
-// ================= DASHBOARD LOAD =================
+// ================= LOAD DASHBOARD =================
 window.addEventListener("load", () => {
     if (window.location.pathname.includes("dashboard")) {
         loadUsers();
@@ -70,11 +69,10 @@ window.addEventListener("load", () => {
     }
 });
 
-
 // ================= USERS =================
 async function loadUsers() {
     try {
-        const res = await fetch("http://localhost:5000/users");
+        const res = await fetch(`${BASE_URL}/users`);
         const users = await res.json();
 
         document.getElementById("count").innerText =
@@ -90,10 +88,9 @@ async function loadUsers() {
         });
 
     } catch (err) {
-        console.log("Error loading users", err);
+        console.log(err);
     }
 }
-
 
 // ================= LOGOUT =================
 function logout() {
@@ -101,34 +98,15 @@ function logout() {
     window.location.href = "index.html";
 }
 
-
-// ================= SCORES =================
+// ================= ADD SCORE =================
 async function addScore() {
     const email = localStorage.getItem("email");
     const score = document.getElementById("score").value;
 
-    if (!email) {
-        alert("User not logged in");
-        return;
-    }
-
-    if (!score) {
-        alert("Score cannot be empty");
-        return;
-    }
-
-    if (!isValidEmail(email)) {
-        alert("Invalid email format");
-        return;
-    }
-
-    if (score < 1 || score > 45) {
-        alert("Score must be between 1 and 45");
-        return;
-    }
+    if (!email || !score) return alert("Invalid input");
 
     try {
-        await fetch("http://localhost:5000/score", {
+        await fetch(`${BASE_URL}/score`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ email, score })
@@ -137,118 +115,50 @@ async function addScore() {
         loadScores();
         loadLeaderboard();
 
-    } catch (err) {
-        console.log("Error adding score:", err);
+    } catch {
+        console.log("Error");
     }
 }
-
 
 // ================= LOAD SCORES =================
 async function loadScores() {
     const email = localStorage.getItem("email");
-
     if (!email) return;
 
     try {
-        const res = await fetch(`http://localhost:5000/score/${email}`);
+        const res = await fetch(`${BASE_URL}/score/${email}`);
         const data = await res.json();
 
         const list = document.getElementById("scoreList");
         list.innerHTML = "";
 
-        let scores = data.scores || [];
-
-        if (scores.length === 0) {
-            list.innerHTML = "<li>No scores found</li>";
-            return;
-        }
-
-        scores.forEach(s => {
+        (data.scores || []).forEach(s => {
             const li = document.createElement("li");
             li.innerText = s;
             list.appendChild(li);
         });
 
-    } catch (err) {
-        console.log("Error loading scores:", err);
+    } catch {
+        console.log("Error");
     }
 }
-
 
 // ================= LEADERBOARD =================
 async function loadLeaderboard() {
     try {
-        const res = await fetch("http://localhost:5000/leaderboard");
+        const res = await fetch(`${BASE_URL}/leaderboard`);
         const data = await res.json();
 
         const list = document.getElementById("leaderboardList");
-        if (!list) return;
-
         list.innerHTML = "";
 
-        const leaderboard = data.leaderboard || [];
-
-        leaderboard.forEach(item => {
+        (data.leaderboard || []).forEach(item => {
             const li = document.createElement("li");
-
-            if (typeof item === "object") {
-                li.innerText = `${item.email || "User"} - ${item.total || 0}`;
-            } else {
-                li.innerText = item;
-            }
-
+            li.innerText = `${item.email} - ${item.total}`;
             list.appendChild(li);
         });
 
-        if (data.top3 && data.top3.length > 0) {
-            document.getElementById("gold").innerText =
-                `🥇 Gold: ${data.top3[0]?.email || "-"}`;
-
-            document.getElementById("silver").innerText =
-                `🥈 Silver: ${data.top3[1]?.email || "-"}`;
-
-            document.getElementById("bronze").innerText =
-                `🥉 Bronze: ${data.top3[2]?.email || "-"}`;
-        }
-
-    } catch (err) {
-        console.log("Leaderboard error:", err);
+    } catch {
+        console.log("Error");
     }
-}
-
-
-// ================= DRAW =================
-let history = [];
-
-function runDraw() {
-    const scoreItems = document.querySelectorAll("#scoreList li");
-    const scoresList = Array.from(scoreItems).map(li => Number(li.innerText));
-
-    let draw = [];
-
-    for (let i = 0; i < 5; i++) {
-        draw.push(Math.floor(Math.random() * 45) + 1);
-    }
-
-    let matches = draw.filter(n => scoresList.includes(n));
-
-    history.unshift({ draw, matches: matches.length });
-
-    displayHistory();
-
-    document.getElementById("drawResult").innerText =
-        `Draw: ${draw.join(", ")} | Matches: ${matches.length}`;
-}
-
-
-// ================= HISTORY =================
-function displayHistory() {
-    const list = document.getElementById("historyList");
-    list.innerHTML = "";
-
-    history.forEach(h => {
-        const li = document.createElement("li");
-        li.innerText = `${h.draw.join(", ")} | Matches: ${h.matches}`;
-        list.appendChild(li);
-    });
 }

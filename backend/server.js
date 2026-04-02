@@ -6,7 +6,6 @@ const connectDB = require("./db");
 const User = require("./models/User");
 const Score = require("./models/Score");
 
-// ================= ROUTES =================
 const adminRoutes = require("./routes/admin");
 
 const app = express();
@@ -14,30 +13,39 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+// ✅ ROOT ROUTE (IMPORTANT FOR RENDER)
+app.get("/", (req, res) => {
+    res.send("API Running 🚀");
+});
 
-// ================= DB CONNECT =================
+// ================= DB =================
 connectDB();
 
-
-// ================= ROUTE MIDDLEWARE =================
+// ================= ROUTES =================
 app.use("/admin", adminRoutes);
 
+// ================= USERS =================
+app.get("/users", async (req, res) => {
+    try {
+        const users = await User.find();
+        res.json(users);
+    } catch {
+        res.json([]);
+    }
+});
 
 // ================= SIGNUP =================
 app.post("/subscribe", async (req, res) => {
     try {
         const user = new User(req.body);
         await user.save();
-
         res.json({ message: "User registered ✅" });
-
-    } catch (err) {
+    } catch {
         res.status(500).json({ message: "Signup error ❌" });
     }
 });
 
-
-// ================= LOGIN (NO SUBSCRIPTION CHECK) =================
+// ================= LOGIN =================
 app.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -58,13 +66,12 @@ app.post("/login", async (req, res) => {
             }
         });
 
-    } catch (err) {
+    } catch {
         res.status(500).json({ message: "Login error" });
     }
 });
 
-
-// ================= SCORE + CHARITY =================
+// ================= SCORE =================
 app.post("/score", async (req, res) => {
     try {
         const { email, score } = req.body;
@@ -72,54 +79,38 @@ app.post("/score", async (req, res) => {
         const newScore = new Score({ email, score });
         await newScore.save();
 
-        // 10% charity rule
         const charityAmount = Number(score) * 0.10;
-
-        console.log("10% goes to charity:", charityAmount);
 
         await User.findOneAndUpdate(
             { email },
-            { $inc: { charityAmount: charityAmount } }
+            { $inc: { charityAmount } }
         );
 
-        res.json({
-            message: "Score added ✅",
-            charityAmount
-        });
+        res.json({ message: "Score added ✅", charityAmount });
 
-    } catch (err) {
+    } catch {
         res.status(500).json({ message: "Error adding score" });
     }
 });
 
-
-// ================= LAST 5 SCORES =================
+// ================= LAST 5 =================
 app.get("/score/:email", async (req, res) => {
     try {
         const scores = await Score.find({ email: req.params.email })
             .sort({ _id: -1 })
             .limit(5);
 
-        res.json({
-            scores: scores.map(s => s.score)
-        });
-
-    } catch (err) {
+        res.json({ scores: scores.map(s => s.score) });
+    } catch {
         res.json({ scores: [] });
     }
 });
-
 
 // ================= LEADERBOARD =================
 app.get("/leaderboard", async (req, res) => {
     try {
         const data = await Score.aggregate([
-            {
-                $group: {
-                    _id: "$email",
-                    total: { $sum: "$score" }
-                }
-            },
+            { $group: { _id: "$email", total: { $sum: "$score" } } },
             { $sort: { total: -1 } }
         ]);
 
@@ -133,13 +124,14 @@ app.get("/leaderboard", async (req, res) => {
             top3: leaderboard.slice(0, 3)
         });
 
-    } catch (err) {
+    } catch {
         res.json({ leaderboard: [], top3: [] });
     }
 });
 
-
 // ================= SERVER =================
-app.listen(5000, () => {
-    console.log("Server running on port 5000 🚀");
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+    console.log("Server running 🚀");
 });
