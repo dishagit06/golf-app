@@ -3,17 +3,17 @@ dns.setServers(["8.8.8.8", "1.1.1.1"]);
 
 const mongoose = require("mongoose");
 
+require("dotenv").config();
+
 const connectDB = async () => {
     try {
-        await mongoose.connect(
-            "mongodb+srv://dishajais246_db_user:acQRu7zxig9KsERS@cluster0.3mfzexz.mongodb.net/golfdb?retryWrites=true&w=majority&appName=Cluster0"
-        );
+        await mongoose.connect(process.env.MONGO_URI);
 
         console.log("MongoDB Connected ✅");
     } catch (err) {
         console.log("DB Error ❌", err);
+        process.exit(1);
     }
 };
-
 
 module.exports = connectDB;

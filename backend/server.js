@@ -35,8 +35,6 @@ async function login() {
 
 
 // ================= SIGNUP =================
-const signupForm = document.getElementById("signupForm");
-
 if (signupForm) {
     signupForm.addEventListener("submit", async (e) => {
         e.preventDefault();
