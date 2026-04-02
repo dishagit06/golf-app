@@ -28,13 +28,15 @@ async function login() {
             window.location.href = "dashboard.html";
         }
 
-    } catch (err) {
+    } catch {
         document.getElementById("msg").innerText = "Server error";
     }
 }
 
 
 // ================= SIGNUP =================
+const signupForm = document.getElementById("signupForm");
+
 if (signupForm) {
     signupForm.addEventListener("submit", async (e) => {
         e.preventDefault();
@@ -108,25 +110,9 @@ async function addScore() {
     const email = localStorage.getItem("email");
     const score = document.getElementById("score").value;
 
-    if (!email) {
-        alert("User not logged in");
-        return;
-    }
-
-    if (!score) {
-        alert("Score cannot be empty");
-        return;
-    }
-
-    if (!isValidEmail(email)) {
-        alert("Invalid email format");
-        return;
-    }
-
-    if (score < 1 || score > 45) {
-        alert("Score must be between 1 and 45");
-        return;
-    }
+    if (!email) return alert("User not logged in");
+    if (!score) return alert("Score cannot be empty");
+    if (!isValidEmail(email)) return alert("Invalid email");
 
     try {
         await fetch(`${BASE_URL}/score`, {
@@ -139,7 +125,7 @@ async function addScore() {
         loadLeaderboard();
 
     } catch (err) {
-        console.log("Error adding score:", err);
+        console.log(err);
     }
 }
 
@@ -147,7 +133,6 @@ async function addScore() {
 // ================= LOAD SCORES =================
 async function loadScores() {
     const email = localStorage.getItem("email");
-
     if (!email) return;
 
     try {
@@ -157,21 +142,14 @@ async function loadScores() {
         const list = document.getElementById("scoreList");
         list.innerHTML = "";
 
-        let scores = data.scores || [];
-
-        if (scores.length === 0) {
-            list.innerHTML = "<li>No scores found</li>";
-            return;
-        }
-
-        scores.forEach(s => {
+        (data.scores || []).forEach(s => {
             const li = document.createElement("li");
             li.innerText = s;
             list.appendChild(li);
         });
 
     } catch (err) {
-        console.log("Error loading scores:", err);
+        console.log(err);
     }
 }
 
@@ -187,27 +165,14 @@ async function loadLeaderboard() {
 
         list.innerHTML = "";
 
-        const leaderboard = data.leaderboard || [];
-
-        leaderboard.forEach(item => {
+        (data.leaderboard || []).forEach(item => {
             const li = document.createElement("li");
             li.innerText = `${item.email} - ${item.total}`;
             list.appendChild(li);
         });
 
-        if (data.top3 && data.top3.length > 0) {
-            document.getElementById("gold").innerText =
-                `🥇 Gold: ${data.top3[0]?.email || "-"}`;
-
-            document.getElementById("silver").innerText =
-                `🥈 Silver: ${data.top3[1]?.email || "-"}`;
-
-            document.getElementById("bronze").innerText =
-                `🥉 Bronze: ${data.top3[2]?.email || "-"}`;
-        }
-
     } catch (err) {
-        console.log("Leaderboard error:", err);
+        console.log(err);
     }
 }
 
@@ -220,7 +185,6 @@ function runDraw() {
     const scoresList = Array.from(scoreItems).map(li => Number(li.innerText));
 
     let draw = [];
-
     for (let i = 0; i < 5; i++) {
         draw.push(Math.floor(Math.random() * 45) + 1);
     }
