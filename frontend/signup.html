@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Signup - Golf Charity Platform</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>Signup</h2>
+
+    <form id="signupForm">
+        <input type="text" id="name" placeholder="Name" required>
+        <input type="email" id="signupEmail" placeholder="Email" required>
+        <input type="password" id="signupPassword" placeholder="Password" required>
+
+        <select id="plan">
+            <option value="">Select Plan</option>
+            <option value="Basic">Basic</option>
+            <option value="Premium">Premium</option>
+        </select>
+
+        <input type="number" id="charity" placeholder="Charity %" min="10">
+
+        <button type="submit">Signup</button>
+    </form>
+
+    <p id="msg"></p>
+
+    <p>Already have account? <a href="index.html">Login</a></p>
+
+</div>
+
+<script src="script.js"></script>
+</body>
+</html>
