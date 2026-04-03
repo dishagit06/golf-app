@@ -7,8 +7,9 @@ function isValidEmail(email) {
 }
 
 // ================= LOGIN =================
-// ================= LOGIN =================
 async function login() {
+    console.log("Login clicked 🔥");
+
     const email = document.getElementById("loginEmail").value;
     const password = document.getElementById("loginPassword").value;
 
@@ -21,21 +22,28 @@ async function login() {
 
         const data = await res.json();
 
+        console.log("Login response:", data); // 🔥 DEBUG
+
         document.getElementById("msg").innerText = data.message;
 
         if (data.access) {
-            localStorage.setItem("email", email);
+
+            // ✅ SAVE PROPERLY
+            localStorage.setItem("email", data.user.email);
             localStorage.setItem("role", data.user.role);
 
-            // ✅ FINAL FIX (IMPORTANT)
+            console.log("Saved role:", data.user.role); // 🔥 DEBUG
+
+            // ✅ REDIRECT BASED ON ROLE
             if (data.user.role === "admin") {
-                window.location.href = "admin.html";   // 👑 admin
+                window.location.href = "admin.html";
             } else {
-                window.location.href = "dashboard.html"; // 👤 user
+                window.location.href = "dashboard.html";
             }
         }
 
-    } catch {
+    } catch (err) {
+        console.log(err);
         document.getElementById("msg").innerText = "Server error ❌";
     }
 }
