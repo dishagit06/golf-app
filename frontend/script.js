@@ -206,21 +206,17 @@ async function loadLeaderboard() {
 async function loadAdminUsers() {
     try {
         const res = await fetch(`${BASE_URL}/admin/users`);
-
         const data = await res.json();
 
-        console.log("Admin API response:", data); // DEBUG
+        console.log("Admin data:", data);
 
-        // ✅ FIX: ensure array
-        if (!Array.isArray(data)) {
-            alert("Admin API error ❌");
-            return;
-        }
+        // ✅ FIX
+        const users = data.users || data;
 
         const list = document.getElementById("adminUsers");
         list.innerHTML = "";
 
-        data.forEach(u => {
+        users.forEach(u => {
             const li = document.createElement("li");
             li.innerText = `${u.name} - ${u.email} - ${u.subscriptionStatus}`;
             list.appendChild(li);
