@@ -1,43 +1,68 @@
 const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema({
-    name: String,
-    email: String,
-    password: String,
+    name: {
+        type: String,
+        required: true
+    },
 
-    // Basic fields
+    email: {
+        type: String,
+        required: true,
+        unique: true   // ✅ important
+    },
+
+    password: {
+        type: String,
+        required: true
+    },
+
+    // ================= PLAN =================
     plan: {
         type: String,
         default: "none"
     },
 
+    // ================= CHARITY =================
     charity: {
         type: String,
         default: "none"
     },
 
-    // ✅ SUBSCRIPTION SYSTEM
+    charityAmount: {
+        type: Number,
+        default: 0
+    },
+
+    // ================= SUBSCRIPTION =================
     subscriptionStatus: {
         type: String,
-        default: "active"   // inactive | active
+        enum: ["active", "inactive"],
+        default: "active"
     },
 
     subscriptionPlan: {
         type: String,
-        default: "none"       // basic | premium
+        enum: ["monthly", "yearly", "none"],
+        default: "none"
     },
 
-    // ✅ ROLE SYSTEM (ADMIN SUPPORT)
+    subscriptionStart: {
+        type: Date,
+        default: Date.now
+    },
+
+    subscriptionEnd: {
+        type: Date
+    },
+
+    // ================= ROLE =================
     role: {
         type: String,
-        default: "user"       // user | admin
-    },
-
-    // ✅ CHARITY IMPROVEMENT (DONATION TRACKING)
-    charityAmount: {
-        type: Number,
-        default: 0
+        enum: ["user", "admin"],
+        default: "user"
     }
-});
+
+}, { timestamps: true }); // ✅ createdAt, updatedAt
 
 module.exports = mongoose.model("User", userSchema);
