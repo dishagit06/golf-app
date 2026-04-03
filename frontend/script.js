@@ -1,3 +1,4 @@
+// ================= BASE URL =================
 const BASE_URL = "https://golf-app-grx0.onrender.com";
 
 // ================= EMAIL VALID =================
@@ -64,13 +65,12 @@ if (signupForm) {
     });
 }
 
-// ================= PASSWORD TOGGLE (LOGIN) =================
+// ================= PASSWORD TOGGLE =================
 function toggleLoginPassword() {
     const input = document.getElementById("loginPassword");
     input.type = input.type === "password" ? "text" : "password";
 }
 
-// ================= PASSWORD TOGGLE (SIGNUP) =================
 function toggleSignupPassword() {
     const input = document.getElementById("signupPassword");
     input.type = input.type === "password" ? "text" : "password";
@@ -91,10 +91,14 @@ async function loadUsers() {
         const res = await fetch(`${BASE_URL}/users`);
         const users = await res.json();
 
-        document.getElementById("count").innerText =
-            "Total Users: " + users.length;
+        const countEl = document.getElementById("count");
+        if (countEl) {
+            countEl.innerText = "Total Users: " + users.length;
+        }
 
         const userList = document.getElementById("userList");
+        if (!userList) return;
+
         userList.innerHTML = "";
 
         users.forEach(user => {
@@ -150,6 +154,8 @@ async function loadScores() {
         const data = await res.json();
 
         const list = document.getElementById("scoreList");
+        if (!list) return;
+
         list.innerHTML = "";
 
         (data.scores || []).forEach(s => {
@@ -180,7 +186,68 @@ async function loadLeaderboard() {
             list.appendChild(li);
         });
 
+        // TOP 3
+        if (data.top3) {
+            document.getElementById("gold").innerText =
+                `🥇 Gold: ${data.top3[0]?.email || "-"}`;
+
+            document.getElementById("silver").innerText =
+                `🥈 Silver: ${data.top3[1]?.email || "-"}`;
+
+            document.getElementById("bronze").innerText =
+                `🥉 Bronze: ${data.top3[2]?.email || "-"}`;
+        }
+
     } catch {
         console.log("Error loading leaderboard");
     }
+}
+
+// ================= DRAW =================
+let history = [];
+
+function runDraw() {
+    const scoreItems = document.querySelectorAll("#scoreList li");
+
+    if (scoreItems.length === 0) {
+        alert("No scores available ❌");
+        return;
+    }
+
+    const scores = Array.from(scoreItems).map(li => Number(li.innerText));
+
+    let draw = [];
+
+    for (let i = 0; i < 5; i++) {
+        draw.push(Math.floor(Math.random() * 45) + 1);
+    }
+
+    let matches = draw.filter(n => scores.includes(n));
+
+    const result = document.getElementById("drawResult");
+    if (result) {
+        result.innerText =
+            `Draw: ${draw.join(", ")} | Matches: ${matches.length}`;
+    }
+
+    history.unshift({
+        draw,
+        matches: matches.length
+    });
+
+    displayHistory();
+}
+
+// ================= HISTORY =================
+function displayHistory() {
+    const list = document.getElementById("historyList");
+    if (!list) return;
+
+    list.innerHTML = "";
+
+    history.forEach(h => {
+        const li = document.createElement("li");
+        li.innerText = `${h.draw.join(", ")} | Matches: ${h.matches}`;
+        list.appendChild(li);
+    });
 }
