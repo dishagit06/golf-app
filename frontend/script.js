@@ -131,6 +131,7 @@ async function loadUsers() {
 // ================= LOGOUT =================
 function logout() {
     localStorage.removeItem("email");
+    localStorage.removeItem("role");   // 🔥 ADD THIS
     window.location.href = "index.html";
 }
 
@@ -221,7 +222,14 @@ async function loadLeaderboard() {
 // ================= ADMIN USERS =================
 async function loadAdminUsers() {
     try {
-        const res = await fetch(`${BASE_URL}/admin/users`);
+        const role = localStorage.getItem("role");
+
+const res = await fetch(`${BASE_URL}/admin/users`, {
+    headers: {
+        "Content-Type": "application/json",
+        "role": role   // 🔥 IMPORTANT
+    }
+});
         const data = await res.json();
 
         console.log("Admin data:", data);

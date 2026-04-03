@@ -4,9 +4,19 @@ const router = express.Router();
 const User = require("../models/User");
 const Score = require("../models/Score");
 
+// 🔐 ADMIN MIDDLEWARE (TOP PE HONA CHAHIYE)
+function isAdmin(req, res, next) {
+    const role = req.headers.role;
+
+    if (role !== "admin") {
+        return res.status(403).json({ message: "Admin only ❌" });
+    }
+
+    next();
+}
 
 // ================= GET ALL USERS =================
-router.get("/users", async (req, res) => {
+router.get("/users", isAdmin, async (req, res) => {
     try {
         const users = await User.find().sort({ createdAt: -1 });
 
@@ -20,9 +30,8 @@ router.get("/users", async (req, res) => {
     }
 });
 
-
 // ================= UPDATE SUBSCRIPTION =================
-router.post("/update-subscription", async (req, res) => {
+router.post("/update-subscription", isAdmin, async (req, res) => {
     try {
         const { userId, status } = req.body;
 
@@ -41,9 +50,8 @@ router.post("/update-subscription", async (req, res) => {
     }
 });
 
-
 // ================= DELETE USER =================
-router.delete("/delete-user/:id", async (req, res) => {
+router.delete("/delete-user/:id", isAdmin, async (req, res) => {
     try {
         await User.findByIdAndDelete(req.params.id);
 
@@ -54,9 +62,8 @@ router.delete("/delete-user/:id", async (req, res) => {
     }
 });
 
-
 // ================= GET ALL SCORES =================
-router.get("/scores", async (req, res) => {
+router.get("/scores", isAdmin, async (req, res) => {
     try {
         const scores = await Score.find().sort({ createdAt: -1 });
 
@@ -70,9 +77,8 @@ router.get("/scores", async (req, res) => {
     }
 });
 
-
 // ================= CHARITY REPORT =================
-router.get("/charity-report", async (req, res) => {
+router.get("/charity-report", isAdmin, async (req, res) => {
     try {
         const users = await User.find();
 
@@ -91,9 +97,8 @@ router.get("/charity-report", async (req, res) => {
     }
 });
 
-
 // ================= BASIC ANALYTICS =================
-router.get("/analytics", async (req, res) => {
+router.get("/analytics", isAdmin, async (req, res) => {
     try {
         const totalUsers = await User.countDocuments();
         const totalScores = await Score.countDocuments();
@@ -117,6 +122,5 @@ router.get("/analytics", async (req, res) => {
         res.status(500).json({ message: "Error fetching analytics ❌" });
     }
 });
-
 
 module.exports = router;

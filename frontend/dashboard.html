@@ -96,6 +96,12 @@
         document.getElementById("userEmail").innerText = "Logged in as: " + email;
     }
 </script>
+<script>
+    const role = localStorage.getItem("role");
 
+    if (role === "admin") {
+        window.location.href = "admin.html";
+    }
+</script>
 </body>
 </html>
