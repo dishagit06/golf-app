@@ -26,7 +26,8 @@ connectDB();
 
 // ================= ROUTES =================
 app.use("/admin", adminRoutes);
-
+const userRoutes = require("./routes/user");
+app.use("/", userRoutes);
 // ================= GET ALL USERS =================
 app.get("/users", async (req, res) => {
     try {
@@ -51,30 +52,6 @@ app.post("/subscribe", async (req, res) => {
 });
 
 // ================= LOGIN =================
-app.post("/login", async (req, res) => {
-    try {
-        const { email, password } = req.body;
-
-        const user = await User.findOne({ email, password });
-
-        if (!user) {
-            return res.json({ message: "Invalid credentials", access: false });
-        }
-
-        res.json({
-            message: "Login successful",
-            access: true,
-            user: {
-                name: user.name,
-                email: user.email,
-                plan: user.plan
-            }
-        });
-
-    } catch (err) {
-        res.status(500).json({ message: "Login error" });
-    }
-});
 
 // ================= ADD SCORE =================
 app.post("/score", async (req, res) => {
