@@ -7,6 +7,7 @@ function isValidEmail(email) {
 }
 
 // ================= LOGIN =================
+// ================= LOGIN =================
 async function login() {
     const email = document.getElementById("loginEmail").value;
     const password = document.getElementById("loginPassword").value;
@@ -23,10 +24,16 @@ async function login() {
         document.getElementById("msg").innerText = data.message;
 
         if (data.access) {
-    localStorage.setItem("email", email);
-    localStorage.setItem("role", data.user.role); // ✅ ADD THIS
-    window.location.href = "dashboard.html";
-                         }
+            localStorage.setItem("email", email);
+            localStorage.setItem("role", data.user.role);
+
+            // ✅ FINAL FIX (IMPORTANT)
+            if (data.user.role === "admin") {
+                window.location.href = "admin.html";   // 👑 admin
+            } else {
+                window.location.href = "dashboard.html"; // 👤 user
+            }
+        }
 
     } catch {
         document.getElementById("msg").innerText = "Server error ❌";
