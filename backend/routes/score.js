@@ -12,39 +12,48 @@ router.post("/score", async (req, res) => {
 
         if (!email || !score) {
             return res.status(400).json({
-                message: "Email and score required"
+                message: "Email and score required ❌"
             });
         }
 
-        // ================= SAVE SCORE =================
-        const newScore = new Score({
-            email,
-            score
-        });
+        if (score < 1 || score > 45) {
+            return res.json({
+                message: "Score must be between 1–45 ❌"
+            });
+        }
 
+        // SAVE SCORE
+        const newScore = new Score({ email, score });
         await newScore.save();
 
-        // ================= CHARITY LOGIC (10%) =================
+        // 🔥 KEEP ONLY LAST 5 SCORES (PRD FIX)
+        const allScores = await Score.find({ email }).sort({ _id: -1 });
+
+        if (allScores.length > 5) {
+            const extra = allScores.slice(5);
+
+            for (let s of extra) {
+                await Score.findByIdAndDelete(s._id);
+            }
+        }
+
+        // CHARITY (10%)
         const charityAmount = Number(score) * 0.10;
 
-        console.log("10% goes to charity:", charityAmount);
-
-        // update user charity total
         await User.findOneAndUpdate(
             { email },
-            { $inc: { charityAmount: charityAmount } }
+            { $inc: { charityAmount } }
         );
 
         return res.json({
-            message: "Score added successfully",
-            score,
+            message: "Score added successfully ✅",
             charityAmount
         });
 
     } catch (err) {
-        console.log("Score save error:", err);
+        console.log(err);
         return res.status(500).json({
-            message: "Server error"
+            message: "Server error ❌"
         });
     }
 });
@@ -53,21 +62,17 @@ router.post("/score", async (req, res) => {
 // ================= GET USER SCORES =================
 router.get("/score/:email", async (req, res) => {
     try {
-        const email = req.params.email;
-
-        const scores = await Score.find({ email })
-            .sort({ _id: -1 }) // latest first
-            .limit(5); // last 5 scores only
+        const scores = await Score.find({ email: req.params.email })
+            .sort({ _id: -1 })
+            .limit(5);
 
         return res.json({
-            email,
             scores: scores.map(s => s.score)
         });
 
     } catch (err) {
-        console.log(err);
         return res.status(500).json({
-            message: "Server error"
+            message: "Server error ❌"
         });
     }
 });
@@ -76,34 +81,29 @@ router.get("/score/:email", async (req, res) => {
 // ================= LEADERBOARD =================
 router.get("/leaderboard", async (req, res) => {
     try {
-        const topUsers = await Score.aggregate([
+        const data = await Score.aggregate([
             {
                 $group: {
                     _id: "$email",
-                    totalScore: { $sum: "$score" }
+                    total: { $sum: "$score" }
                 }
             },
-            { $sort: { totalScore: -1 } }
+            { $sort: { total: -1 } }
         ]);
 
-        // top 3 users
-        const top3 = topUsers.slice(0, 3);
+        const leaderboard = data.map(d => ({
+            email: d._id,
+            total: d.total
+        }));
 
         return res.json({
-            leaderboard: topUsers.map(u => ({
-                email: u._id,
-                score: u.totalScore
-            })),
-            top3: top3.map(u => ({
-                email: u._id,
-                score: u.totalScore
-            }))
+            leaderboard,
+            top3: leaderboard.slice(0, 3)
         });
 
     } catch (err) {
-        console.log(err);
         return res.status(500).json({
-            message: "Server error"
+            message: "Server error ❌"
         });
     }
 });

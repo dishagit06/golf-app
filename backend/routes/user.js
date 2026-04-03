@@ -3,52 +3,64 @@ const router = express.Router();
 const User = require("../models/User");
 
 
-// ================= LOGIN ROUTE =================
+// ================= LOGIN =================
 router.post("/login", async (req, res) => {
     try {
         const { email, password } = req.body;
 
-        // find user
+        // validation
+        if (!email || !password) {
+            return res.status(400).json({
+                message: "Email and password required ❌"
+            });
+        }
+
         const user = await User.findOne({ email, password });
 
         if (!user) {
             return res.status(400).json({
-                message: "Invalid email or password",
+                message: "Invalid email or password ❌",
                 access: false
             });
         }
 
-        // success login (NO SUBSCRIPTION CHECK)
         return res.json({
-            message: "Login successful",
+            message: "Login successful ✅",
             access: true,
             user: {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                plan: user.plan
+                plan: user.plan,
+                subscriptionStatus: user.subscriptionStatus,
+                role: user.role
             }
         });
 
     } catch (err) {
         console.log(err);
-        return res.status(500).json({
-            message: "Server error"
+        res.status(500).json({
+            message: "Server error ❌"
         });
     }
 });
 
 
-// ================= CHARITY LIST ROUTE =================
+// ================= CHARITY LIST =================
 router.get("/charity-list", (req, res) => {
-    res.json([
-        "Red Cross",
-        "Save Children",
-        "Cancer Foundation",
-        "Animal Welfare"
-    ]);
+    try {
+        res.json([
+            "Red Cross",
+            "Save Children",
+            "Cancer Foundation",
+            "Animal Welfare"
+        ]);
+    } catch {
+        res.status(500).json({
+            message: "Error fetching charities ❌"
+        });
+    }
 });
 
 
-// export router
 module.exports = router;
