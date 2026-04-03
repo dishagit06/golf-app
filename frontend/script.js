@@ -202,7 +202,25 @@ async function loadLeaderboard() {
         console.log("Error loading leaderboard");
     }
 }
+// ================= ADMIN USERS =================
+async function loadAdminUsers() {
+    try {
+        const res = await fetch(`${BASE_URL}/admin/users`);
+        const users = await res.json();
 
+        const list = document.getElementById("adminUsers");
+        list.innerHTML = "";
+
+        users.forEach(u => {
+            const li = document.createElement("li");
+            li.innerText = `${u.name} - ${u.email} - ${u.subscriptionStatus}`;
+            list.appendChild(li);
+        });
+
+    } catch (err) {
+        console.log("Admin error", err);
+    }
+}
 // ================= DRAW =================
 let history = [];
 
