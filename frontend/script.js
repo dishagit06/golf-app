@@ -21,13 +21,13 @@ async function login() {
 
         document.getElementById("msg").innerText = data.message;
 
-        if (data.message === "Login successful") {
+        if (data.access) {
             localStorage.setItem("email", email);
             window.location.href = "dashboard.html";
         }
 
     } catch {
-        document.getElementById("msg").innerText = "Server error";
+        document.getElementById("msg").innerText = "Server error ❌";
     }
 }
 
@@ -44,6 +44,10 @@ if (signupForm) {
         const plan = document.getElementById("plan").value;
         const charity = document.getElementById("charity").value;
 
+        if (!name || !email || !password) {
+            return alert("Fill all fields ❌");
+        }
+
         try {
             const res = await fetch(`${BASE_URL}/subscribe`, {
                 method: "POST",
@@ -55,9 +59,21 @@ if (signupForm) {
             document.getElementById("msg").innerText = data.message;
 
         } catch {
-            document.getElementById("msg").innerText = "Server error";
+            document.getElementById("msg").innerText = "Server error ❌";
         }
     });
+}
+
+// ================= PASSWORD TOGGLE (LOGIN) =================
+function toggleLoginPassword() {
+    const input = document.getElementById("loginPassword");
+    input.type = input.type === "password" ? "text" : "password";
+}
+
+// ================= PASSWORD TOGGLE (SIGNUP) =================
+function toggleSignupPassword() {
+    const input = document.getElementById("signupPassword");
+    input.type = input.type === "password" ? "text" : "password";
 }
 
 // ================= LOAD DASHBOARD =================
@@ -87,8 +103,8 @@ async function loadUsers() {
             userList.appendChild(li);
         });
 
-    } catch (err) {
-        console.log(err);
+    } catch {
+        console.log("Error loading users");
     }
 }
 
@@ -103,7 +119,11 @@ async function addScore() {
     const email = localStorage.getItem("email");
     const score = document.getElementById("score").value;
 
-    if (!email || !score) return alert("Invalid input");
+    if (!email || !score) return alert("Invalid input ❌");
+
+    if (score < 1 || score > 45) {
+        return alert("Score must be 1–45 ❌");
+    }
 
     try {
         await fetch(`${BASE_URL}/score`, {
@@ -116,7 +136,7 @@ async function addScore() {
         loadLeaderboard();
 
     } catch {
-        console.log("Error");
+        console.log("Error adding score");
     }
 }
 
@@ -139,7 +159,7 @@ async function loadScores() {
         });
 
     } catch {
-        console.log("Error");
+        console.log("Error loading scores");
     }
 }
 
@@ -150,6 +170,8 @@ async function loadLeaderboard() {
         const data = await res.json();
 
         const list = document.getElementById("leaderboardList");
+        if (!list) return;
+
         list.innerHTML = "";
 
         (data.leaderboard || []).forEach(item => {
@@ -159,6 +181,6 @@ async function loadLeaderboard() {
         });
 
     } catch {
-        console.log("Error");
+        console.log("Error loading leaderboard");
     }
 }

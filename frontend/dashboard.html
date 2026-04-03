@@ -2,7 +2,11 @@
 <html>
 <head>
     <title>Dashboard - Golf Charity Platform</title>
+
+    <!-- FONT -->
     <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -10,23 +14,33 @@
 
 <div class="container dashboard">
 
-    <h2>Dashboard</h2>
+    <h2>🏌️ Dashboard</h2>
 
     <button class="logout" onclick="logout()">Logout</button>
 
+    <!-- USER INFO -->
     <div class="section">
-        <h3>Users</h3>
+        <h3>👤 Logged In User</h3>
+        <p id="userEmail"></p>
+    </div>
+
+    <hr>
+
+    <!-- USERS -->
+    <div class="section">
+        <h3>👥 All Users</h3>
         <p id="count"></p>
         <ul id="userList"></ul>
     </div>
 
     <hr>
 
+    <!-- ADD SCORE -->
     <div class="section">
-        <h3>Add Score</h3>
+        <h3>➕ Add Score</h3>
 
         <div class="row">
-            <input type="number" id="score" placeholder="Enter score (1-45)">
+            <input type="number" id="score" placeholder="Enter score (1-45)" min="1" max="45">
             <button class="add" onclick="addScore()">Add</button>
         </div>
 
@@ -35,40 +49,53 @@
 
     <hr>
 
+    <!-- TOP 3 -->
     <div class="section">
-    <h3>🏆 Top 3 Players</h3>
+        <h3>🏆 Top 3 Players</h3>
 
-    <div id="top3">
-        <p id="gold">🥇 Gold: -</p>
-        <p id="silver">🥈 Silver: -</p>
-        <p id="bronze">🥉 Bronze: -</p>
+        <div id="top3">
+            <p id="gold">🥇 Gold: -</p>
+            <p id="silver">🥈 Silver: -</p>
+            <p id="bronze">🥉 Bronze: -</p>
+        </div>
     </div>
-</div>
 
-    <!-- ⭐ LEADERBOARD ADDED HERE -->
+    <hr>
+
+    <!-- LEADERBOARD -->
     <div class="section">
-        <h3>Leaderboard 🏆</h3>
+        <h3>📊 Leaderboard</h3>
         <ul id="leaderboardList"></ul>
     </div>
 
     <hr>
 
+    <!-- DRAW -->
     <div class="section">
-        <h3>Run Draw 🎯</h3>
+        <h3>🎯 Run Draw</h3>
         <button class="draw" onclick="runDraw()">Run Draw</button>
         <p id="drawResult"></p>
     </div>
 
     <hr>
 
+    <!-- HISTORY -->
     <div class="section">
-        <h3>Draw History</h3>
+        <h3>📜 Draw History</h3>
         <ul id="historyList"></ul>
     </div>
 
 </div>
 
 <script src="script.js"></script>
+
+<!-- SHOW LOGGED USER -->
+<script>
+    const email = localStorage.getItem("email");
+    if (email) {
+        document.getElementById("userEmail").innerText = "Logged in as: " + email;
+    }
+</script>
 
 </body>
 </html>

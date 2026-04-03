@@ -2,6 +2,11 @@
 <html>
 <head>
     <title>Signup - Golf Charity Platform</title>
+
+    <!-- FONT -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+
+    <!-- CSS -->
     <link rel="stylesheet" href="style.css">
 </head>
 
@@ -9,30 +14,46 @@
 
 <div class="container">
 
-    <h2>Signup</h2>
+    <h2>🏌️ Golf Charity Platform</h2>
+    <h3>Create Account</h3>
 
     <form id="signupForm">
-        <input type="text" id="name" placeholder="Name" required>
-        <input type="email" id="signupEmail" placeholder="Email" required>
-        <input type="password" id="signupPassword" placeholder="Password" required>
 
-        <select id="plan">
+        <input type="text" id="name" placeholder="Enter Name" required>
+
+        <input type="email" id="signupEmail" placeholder="Enter Email" required>
+
+        <!-- PASSWORD WITH EYE -->
+        <div style="position: relative;">
+            <input type="password" id="signupPassword" placeholder="Enter Password" required>
+
+            <span onclick="toggleSignupPassword()" 
+                  style="position: absolute; right: 10px; top: 10px; cursor: pointer;">
+                👁️
+            </span>
+        </div>
+
+        <!-- PLAN -->
+        <select id="plan" required>
             <option value="">Select Plan</option>
-            <option value="Basic">Basic</option>
-            <option value="Premium">Premium</option>
+            <option value="monthly">Monthly Plan</option>
+            <option value="yearly">Yearly Plan</option>
         </select>
 
-        <input type="number" id="charity" placeholder="Charity %" min="10">
+        <!-- CHARITY -->
+        <input type="number" id="charity" placeholder="Charity % (min 10%)" min="10" required>
 
         <button type="submit">Signup</button>
+
     </form>
 
     <p id="msg"></p>
 
-    <p>Already have account? <a href="index.html">Login</a></p>
+    <p>Already have an account? <a href="index.html">Login</a></p>
 
 </div>
 
 <script src="script.js"></script>
+
 </body>
 </html>
