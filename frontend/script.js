@@ -23,9 +23,10 @@ async function login() {
         document.getElementById("msg").innerText = data.message;
 
         if (data.access) {
-            localStorage.setItem("email", email);
-            window.location.href = "dashboard.html";
-        }
+    localStorage.setItem("email", email);
+    localStorage.setItem("role", data.user.role); // ✅ ADD THIS
+    window.location.href = "dashboard.html";
+                         }
 
     } catch {
         document.getElementById("msg").innerText = "Server error ❌";
