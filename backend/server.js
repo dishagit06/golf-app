@@ -1,213 +1,150 @@
-// ================= BASE URL =================
-const BASE_URL = "https://golf-app-grx0.onrender.com";
+const express = require("express");
+const cors = require("cors");
 
-// ================= EMAIL VALIDATION =================
-function isValidEmail(email) {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
-}
+const connectDB = require("./db");
+const User = require("./models/User");
+const Score = require("./models/Score");
+const adminRoutes = require("./routes/admin");
 
+const app = express();
 
-// ================= LOGIN =================
-async function login() {
-    const email = document.getElementById("loginEmail").value;
-    const password = document.getElementById("loginPassword").value;
+// ================= MIDDLEWARE =================
+app.use(cors());
+app.use(express.json());
 
+// ================= ROOT ROUTE =================
+app.get("/", (req, res) => {
+    res.send("API Running 🚀");
+});
+
+// ================= DB CONNECT =================
+connectDB();
+
+// ================= ROUTES =================
+app.use("/admin", adminRoutes);
+
+// ================= GET ALL USERS =================
+app.get("/users", async (req, res) => {
     try {
-        const res = await fetch(`${BASE_URL}/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-        });
-
-        const data = await res.json();
-
-        document.getElementById("msg").innerText = data.message;
-
-        if (data.access) {
-            localStorage.setItem("email", email);
-            window.location.href = "dashboard.html";
-        }
-
-    } catch {
-        document.getElementById("msg").innerText = "Server error";
-    }
-}
-
-
-// ================= SIGNUP =================
-const signupForm = document.getElementById("signupForm");
-
-if (signupForm) {
-    signupForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const name = document.getElementById("name").value;
-        const email = document.getElementById("signupEmail").value;
-        const password = document.getElementById("signupPassword").value;
-        const plan = document.getElementById("plan").value;
-        const charity = document.getElementById("charity").value;
-
-        try {
-            const res = await fetch(`${BASE_URL}/subscribe`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ name, email, password, plan, charity })
-            });
-
-            const data = await res.json();
-            document.getElementById("msg").innerText = data.message;
-
-        } catch {
-            document.getElementById("msg").innerText = "Server error";
-        }
-    });
-}
-
-
-// ================= DASHBOARD LOAD =================
-window.addEventListener("load", () => {
-    if (window.location.pathname.includes("dashboard")) {
-        loadUsers();
-        loadScores();
-        loadLeaderboard();
+        const users = await User.find();
+        res.json(users);
+    } catch (err) {
+        res.json([]);
     }
 });
 
-
-// ================= USERS =================
-async function loadUsers() {
+// ================= SIGNUP =================
+app.post("/subscribe", async (req, res) => {
     try {
-        const res = await fetch(`${BASE_URL}/users`);
-        const users = await res.json();
+        const user = new User(req.body);
+        await user.save();
 
-        document.getElementById("count").innerText =
-            "Total Users: " + users.length;
+        res.json({ message: "User registered ✅" });
 
-        const userList = document.getElementById("userList");
-        userList.innerHTML = "";
+    } catch (err) {
+        res.status(500).json({ message: "Signup error ❌" });
+    }
+});
 
-        users.forEach(user => {
-            const li = document.createElement("li");
-            li.innerText = `${user.name} - ${user.email}`;
-            userList.appendChild(li);
+// ================= LOGIN =================
+app.post("/login", async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        const user = await User.findOne({ email, password });
+
+        if (!user) {
+            return res.json({ message: "Invalid credentials", access: false });
+        }
+
+        res.json({
+            message: "Login successful",
+            access: true,
+            user: {
+                name: user.name,
+                email: user.email,
+                plan: user.plan
+            }
         });
 
     } catch (err) {
-        console.log("Error loading users", err);
+        res.status(500).json({ message: "Login error" });
     }
-}
-
-
-// ================= LOGOUT =================
-function logout() {
-    localStorage.removeItem("email");
-    window.location.href = "index.html";
-}
-
+});
 
 // ================= ADD SCORE =================
-async function addScore() {
-    const email = localStorage.getItem("email");
-    const score = document.getElementById("score").value;
-
-    if (!email) return alert("User not logged in");
-    if (!score) return alert("Score cannot be empty");
-    if (!isValidEmail(email)) return alert("Invalid email");
-
+app.post("/score", async (req, res) => {
     try {
-        await fetch(`${BASE_URL}/score`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, score })
-        });
+        const { email, score } = req.body;
 
-        loadScores();
-        loadLeaderboard();
+        const newScore = new Score({ email, score });
+        await newScore.save();
 
-    } catch (err) {
-        console.log(err);
-    }
-}
+        // 10% charity logic
+        const charityAmount = Number(score) * 0.10;
 
+        await User.findOneAndUpdate(
+            { email },
+            { $inc: { charityAmount: charityAmount } }
+        );
 
-// ================= LOAD SCORES =================
-async function loadScores() {
-    const email = localStorage.getItem("email");
-    if (!email) return;
-
-    try {
-        const res = await fetch(`${BASE_URL}/score/${email}`);
-        const data = await res.json();
-
-        const list = document.getElementById("scoreList");
-        list.innerHTML = "";
-
-        (data.scores || []).forEach(s => {
-            const li = document.createElement("li");
-            li.innerText = s;
-            list.appendChild(li);
+        res.json({
+            message: "Score added ✅",
+            charityAmount
         });
 
     } catch (err) {
-        console.log(err);
+        res.status(500).json({ message: "Error adding score" });
     }
-}
+});
 
+// ================= LAST 5 SCORES =================
+app.get("/score/:email", async (req, res) => {
+    try {
+        const scores = await Score.find({ email: req.params.email })
+            .sort({ _id: -1 })
+            .limit(5);
+
+        res.json({
+            scores: scores.map(s => s.score)
+        });
+
+    } catch (err) {
+        res.json({ scores: [] });
+    }
+});
 
 // ================= LEADERBOARD =================
-async function loadLeaderboard() {
+app.get("/leaderboard", async (req, res) => {
     try {
-        const res = await fetch(`${BASE_URL}/leaderboard`);
-        const data = await res.json();
+        const data = await Score.aggregate([
+            {
+                $group: {
+                    _id: "$email",
+                    total: { $sum: "$score" }
+                }
+            },
+            { $sort: { total: -1 } }
+        ]);
 
-        const list = document.getElementById("leaderboardList");
-        if (!list) return;
+        const leaderboard = data.map(d => ({
+            email: d._id,
+            total: d.total
+        }));
 
-        list.innerHTML = "";
-
-        (data.leaderboard || []).forEach(item => {
-            const li = document.createElement("li");
-            li.innerText = `${item.email} - ${item.total}`;
-            list.appendChild(li);
+        res.json({
+            leaderboard,
+            top3: leaderboard.slice(0, 3)
         });
 
     } catch (err) {
-        console.log(err);
+        res.json({ leaderboard: [], top3: [] });
     }
-}
+});
 
+// ================= SERVER =================
+const PORT = process.env.PORT || 5000;
 
-// ================= DRAW =================
-let history = [];
-
-function runDraw() {
-    const scoreItems = document.querySelectorAll("#scoreList li");
-    const scoresList = Array.from(scoreItems).map(li => Number(li.innerText));
-
-    let draw = [];
-    for (let i = 0; i < 5; i++) {
-        draw.push(Math.floor(Math.random() * 45) + 1);
-    }
-
-    let matches = draw.filter(n => scoresList.includes(n));
-
-    history.unshift({ draw, matches: matches.length });
-
-    displayHistory();
-
-    document.getElementById("drawResult").innerText =
-        `Draw: ${draw.join(", ")} | Matches: ${matches.length}`;
-}
-
-
-// ================= HISTORY =================
-function displayHistory() {
-    const list = document.getElementById("historyList");
-    list.innerHTML = "";
-
-    history.forEach(h => {
-        const li = document.createElement("li");
-        li.innerText = `${h.draw.join(", ")} | Matches: ${h.matches}`;
-        list.appendChild(li);
-    });
-}
+app.listen(PORT, () => {
+    console.log(`Server running on port ${PORT} 🚀`);
+});
